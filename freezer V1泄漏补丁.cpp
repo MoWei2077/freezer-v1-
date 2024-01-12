@@ -5,7 +5,6 @@
 #include <sstream>
 #include <unistd.h>
 #include <sys/stat.h>
-// 调用shell命令
 std::string exec(const char* cmd) {
     char buffer[128];
     std::string result = "";
@@ -22,7 +21,6 @@ std::string exec(const char* cmd) {
     pclose(pipe);
     return result;
 }
-
 // freezerV1 泄漏补丁
 void freezeit(){
     std::string _fv1path = exec("mount -t cgroup | awk '/freezer/ {print $3}'");
@@ -39,12 +37,19 @@ void freezeit(){
             frozen_file << "THAWED";
             frozen_file.close();
         } else {
+   std::string frozen_file1 = "echo \"THAWED\" > " + _fv1path + "/frozen/freezer.state";
+        system(frozen_file1.c_str());
+
             std::cerr << "无法打开文件" << _fv1path + "/frozen/freezer.state" << std::endl;
         }
 
         sleep(10);
 
         std::ofstream frozen_file2(_fv1path + "/frozen/freezer.state");
+       std::string frozen_file3 = "echo \"FROZEN\" > " + _fv1path + "/frozen/freezer.state";
+                // 执行命令
+        system(frozen_file3.c_str());
+
         if (frozen_file2.is_open()) {
             frozen_file2 << "FROZEN";
             frozen_file2.close();
@@ -90,6 +95,9 @@ void initialization(){
         frozen_file << "1";
         frozen_file.close();
     } else {
+std::string frozen_file0 = "echo \"1\" > " + _fv1path + "/frozen/freezer.killable";
+                // 执行命令
+        system(frozen_file0.c_str());
         std::cerr << "无法打开文件: " << _fv1path + "/frozen/freezer.killable" << std::endl;
     }
 
@@ -98,6 +106,8 @@ void initialization(){
         unfrozen_file << "1";
         unfrozen_file.close();
     } else {
+      std::string unfrozen_file0 = "echo \"1\" > " + _fv1path + "/unfrozen/freezer.killable";
+        system(unfrozen_file0.c_str());
         std::cerr << "无法打开文件: " << _fv1path + "/unfrozen/freezer.killable" << std::endl;
     }
 
@@ -114,7 +124,7 @@ void files_path(){
         freezer();
     } else {
         std::cout << "警告:非法使用此模块" <<std::endl;
-        std::cout << "开始休眠所有关于A0的进程" <<std::endl;
+        std::cout << "开始休眠所有关于freezer V1修复补丁的进程" <<std::endl;
         sleep(60 * 60 * 24 * 365);
     }
 }
